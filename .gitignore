@@ -50,3 +50,38 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# mine --------------
+# Ignore object files, binaries, and other build artifacts
+*.o
+*.ko
+*.mod
+*.mod.o
+*.mod.c
+*.symvers
+*.order
+*.markers
+*.cmd
+
+# Ignore temporary files
+*.tmp
+
+# Ignore backup files
+*~
+*.bak
+
+# Ignore kernel build directories
+/Module.symvers
+/Module.markers
+/Module.order
+
+# Ignore compiled Python files, in case scripts are included
+__pycache__/
+*.py[cod]
+
+# Ignore log files and dumps
+*.log
+*.dmp
+
+# Ignore patch files
+*.patch
