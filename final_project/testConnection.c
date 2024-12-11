@@ -9,8 +9,6 @@
 #define USB_PRODUCT_ID 0xea60 //    CP210x USB to UART Bridge
 // Global input device structure
 static struct input_dev *keyboard_dev;
-static struct timer_list keyboard_timer;
-
 
 // ---------------------------------------------------------- Recieve the UART message (encrypted keyboard report)
 
