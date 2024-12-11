@@ -54,6 +54,7 @@ static int keyboard_UART_probe(struct usb_interface *interface, const struct usb
     for(int i = 0; i < 3; ++i){
         msleep(10000); 
         generate_key_events((int[]){KEY_A, KEY_B, KEY_C}, 3);
+        pr_info("%i. key press event\n", i);
     }
     return 0;
 }
