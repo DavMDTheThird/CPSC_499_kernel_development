@@ -20,26 +20,26 @@ static struct input_dev *keyboard_dev;
 
 // ---------------------------------------------------------- Generate a keyboard report
 // Function to send key events
-static void generate_key_events(const int *keycodes, size_t count) {
-    size_t i;
-    if (!keyboard_dev) {
-        pr_err("Input device is not initialized\n");
-        return;
-    }
+// static void generate_key_events(const int *keycodes, size_t count) {
+//     size_t i;
+//     if (!keyboard_dev) {
+//         pr_err("Input device is not initialized\n");
+//         return;
+//     }
 
-    for (i = 0; i < count; i++) {
-        int keycode = keycodes[i];
+//     for (i = 0; i < count; i++) {
+//         int keycode = keycodes[i];
         
-        // Key press
-        input_report_key(keyboard_dev, keycode, 1);
+//         // Key press
+//         input_report_key(keyboard_dev, keycode, 1);
         
-        // Key release
-        input_report_key(keyboard_dev, keycode, 0);
-    }
+//         // Key release
+//         input_report_key(keyboard_dev, keycode, 0);
+//     }
 
-    // Sync events
-    input_sync(keyboard_dev);
-}
+//     // Sync events
+//     input_sync(keyboard_dev);
+// }
 
 // ---------------------------------------------------------- Reading the Devices
 static struct usb_device_id usb_uart_table[] = {
