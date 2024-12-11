@@ -51,11 +51,8 @@ MODULE_DEVICE_TABLE(usb, usb_uart_table);
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
     pr_info("USB UART device connected: Hello\n");
 
-    for(int i = 0; i < 3; ++i){
-        msleep(10000); 
-        generate_key_events((int[]){KEY_A, KEY_B, KEY_C}, 3);
-        pr_info("%i. key press event\n", i);
-    }
+    generate_key_events((int[]){KEY_A, KEY_B, KEY_C}, 3);
+    
     return 0;
 }
 
