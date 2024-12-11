@@ -20,7 +20,7 @@ static struct timer_list keyboard_timer;
 
 // ---------------------------------------------------------- Generate a keyboard report
 // Function to send key events
-static void generate_key_events(struct timer_list *t, const int *keycodes, size_t count) {
+static void generate_key_events(const int *keycodes, size_t count) {
     size_t i;
     if (!keyboard_dev) {
         pr_err("Input device is not initialized\n");
@@ -40,9 +40,6 @@ static void generate_key_events(struct timer_list *t, const int *keycodes, size_
 
         pr_info("Key pressed: %d\n", keycode);
     }
-
-    // Restart the timer to simulate periodic key presses
-    mod_timer(&keyboard_timer, jiffies + msecs_to_jiffies(1000));
 }
 
 // ---------------------------------------------------------- Reading the Devices
@@ -100,10 +97,6 @@ static int __init keyboard_UART_init(void){
         return error;
     }
 
-    // Initialize and start the timer - 
-    timer_setup(&keyboard_timer, generate_key_events, 0);
-    mod_timer(&keyboard_timer, jiffies + msecs_to_jiffies(1000));
-
     pr_info("Keyboard driver initialized\n");
 
     return usb_register(&keyboard_UART_driver);
@@ -115,8 +108,6 @@ static void __exit keyboard_UART_exit(void){
         input_unregister_device(keyboard_dev);
         keyboard_dev = NULL;
     }
-
-    del_timer(&keyboard_timer);
 
     pr_info("Keyboard driver terminated\n");
 
