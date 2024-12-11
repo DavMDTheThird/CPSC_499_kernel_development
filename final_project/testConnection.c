@@ -8,8 +8,8 @@
 #define USB_VENDOR_ID  0x10c4 //    Silicon Labs
 #define USB_PRODUCT_ID 0xea60 //    CP210x USB to UART Bridge
 // Global input device structure
-#define DRIVER_NAME "keyboard_dr"
-static struct input_dev *keyboard_dev;
+// #define DRIVER_NAME "keyboard_dr"
+// static struct input_dev *keyboard_dev;
 
 
 // ---------------------------------------------------------- Recieve the UART message (encrypted keyboard report)
