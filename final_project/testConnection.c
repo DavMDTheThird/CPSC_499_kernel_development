@@ -51,8 +51,8 @@ MODULE_DEVICE_TABLE(usb, usb_uart_table);
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
     pr_info("USB UART device connected: Hello\n");
 
-    generate_key_events((int[]){KEY_A, KEY_B, KEY_C}, 3);
-    
+    // generate_key_events((int[]){KEY_A, KEY_B, KEY_C}, 3);
+
     return 0;
 }
 
@@ -70,37 +70,37 @@ static struct usb_driver keyboard_UART_driver = {
 
 // Module initialization
 static int __init keyboard_UART_init(void){
-    int error;
-    // Allocate and register the keyboard input device
-    keyboard_dev = input_allocate_device();
-    if(!keyboard_dev){
-        pr_err("Failed to allocate input device\n");
-        return -ENOMEM; // Error NO MEMory
-    }
+    // int error;
+    // // Allocate and register the keyboard input device
+    // keyboard_dev = input_allocate_device();
+    // if(!keyboard_dev){
+    //     pr_err("Failed to allocate input device\n");
+    //     return -ENOMEM; // Error NO MEMory
+    // }
 
-    keyboard_dev->name = DRIVER_NAME;
-    keyboard_dev->id.bustype = BUS_HOST;
-    set_bit(EV_KEY, keyboard_dev->evbit); // Set it so it can make key events
+    // keyboard_dev->name = DRIVER_NAME;
+    // keyboard_dev->id.bustype = BUS_HOST;
+    // set_bit(EV_KEY, keyboard_dev->evbit); // Set it so it can make key events
 
-    // Register the input device
-    error = input_register_device(keyboard_dev);
-    if(error){
-        pr_err("Failed to register input device\n");
-        input_free_device(keyboard_dev);
-        return error;
-    }
-    pr_info("Keyboard driver initialized\n");
+    // // Register the input device
+    // error = input_register_device(keyboard_dev);
+    // if(error){
+    //     pr_err("Failed to register input device\n");
+    //     input_free_device(keyboard_dev);
+    //     return error;
+    // }
+    // pr_info("Keyboard driver initialized\n");
 
     return usb_register(&keyboard_UART_driver);
 }
 
 // Module cleanup
 static void __exit keyboard_UART_exit(void){
-    if(keyboard_dev){
-        input_unregister_device(keyboard_dev);
-        keyboard_dev = NULL;
-    }
-    pr_info("Keyboard driver terminated\n");
+    // if(keyboard_dev){
+    //     input_unregister_device(keyboard_dev);
+    //     keyboard_dev = NULL;
+    // }
+    // pr_info("Keyboard driver terminated\n");
 
     usb_deregister(&keyboard_UART_driver);
 }
