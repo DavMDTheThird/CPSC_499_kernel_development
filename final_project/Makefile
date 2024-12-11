@@ -1,4 +1,3 @@
-obj-m += keyboard_HID_module.o
 obj-m += testConnection.o
 
 
