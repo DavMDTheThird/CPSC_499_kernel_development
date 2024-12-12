@@ -31,6 +31,9 @@ static void generate_key_events(const int *keycodes, size_t count) {
         // Key press
         input_report_key(keyboard_dev, keycode, 1);
         input_sync(keyboard_dev);
+
+        input_report_key(keyboard_dev, KEY_LEFTSHIFT, 1);
+        input_sync(keyboard_dev);
         
         // Key release
         input_report_key(keyboard_dev, keycode, 0);
