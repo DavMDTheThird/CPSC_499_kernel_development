@@ -27,15 +27,17 @@ static void generate_key_events(const int *keycodes, size_t count) {
 
     for (i = 0; i < count; i++) {
         int keycode = keycodes[i];
+
+        input_report_key(keyboard_dev, KEY_LEFTSHIFT, 1);
+        input_sync(keyboard_dev);
         
         // Key press
         input_report_key(keyboard_dev, keycode, 1);
         input_sync(keyboard_dev);
 
-        input_report_key(keyboard_dev, KEY_LEFTSHIFT, 1);
-        input_sync(keyboard_dev);
         
         // Key release
+        input_report_key(keyboard_dev, KEY_LEFTSHIFT, 0);
         input_report_key(keyboard_dev, keycode, 0);
         input_sync(keyboard_dev);
 
