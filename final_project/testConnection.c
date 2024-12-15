@@ -24,12 +24,13 @@ static void generate_key_events(const int *keycodes, size_t count) {
         pr_err("Input device is not initialized\n");
         return;
     }
+    input_report_key(keyboard_dev, 0x04, 1);
+    input_sync(keyboard_dev);
+    input_report_key(keyboard_dev, 0x04, 0);
+    input_sync(keyboard_dev);
 
     for (i = 0; i < count; i++) {
         int keycode = keycodes[i];
-
-        input_report_key(keyboard_dev, KEY_LEFTSHIFT, 1);
-        input_sync(keyboard_dev);
         
         // Key press
         input_report_key(keyboard_dev, keycode, 1);
@@ -37,7 +38,7 @@ static void generate_key_events(const int *keycodes, size_t count) {
 
         
         // Key release
-        input_report_key(keyboard_dev, KEY_LEFTSHIFT, 0);
+        // input_report_key(keyboard_dev, KEY_LEFTSHIFT, 0);
         input_report_key(keyboard_dev, keycode, 0);
         input_sync(keyboard_dev);
 
