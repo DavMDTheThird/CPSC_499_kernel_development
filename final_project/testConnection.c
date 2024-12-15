@@ -18,33 +18,49 @@ static struct input_dev *keyboard_dev;
 
 // ---------------------------------------------------------- Generate a keyboard report
 // Function to send key events
-static void generate_key_events(const int *keycodes, size_t count) {
+static void generate_key_events(const int *keymodifiers, const int *keycodes, size_t count) {
     size_t i;
     if (!keyboard_dev) {
         pr_err("Input device is not initialized\n");
         return;
     }
-    input_report_key(keyboard_dev, 0x04, 1);
-    input_sync(keyboard_dev);
-    input_report_key(keyboard_dev, 0x04, 0);
-    input_sync(keyboard_dev);
 
+    // Handle modifier key press
+    for (i = 0; i < count; i++) {
+        int keymod = keymodifiers[i];
+        if (keymod > 0) { // Assuming a positive value means a modifier is active
+            input_report_key(keyboard_dev, keymod, 1); // Press the modifier
+            input_sync(keyboard_dev);
+            pr_info("Modifier key pressed: %d\n", keymod);
+        }
+    }
+
+    // Handle regular key events
     for (i = 0; i < count; i++) {
         int keycode = keycodes[i];
         
         // Key press
         input_report_key(keyboard_dev, keycode, 1);
         input_sync(keyboard_dev);
-
         
         // Key release
-        // input_report_key(keyboard_dev, KEY_LEFTSHIFT, 0);
         input_report_key(keyboard_dev, keycode, 0);
         input_sync(keyboard_dev);
 
         pr_info("Key pressed: %d\n", keycode);
     }
+
+    // Handle modifier key release
+    for (i = 0; i < count; i++) {
+        int keymod = keymodifiers[i];
+        if (keymod > 0) {
+            input_report_key(keyboard_dev, keymod, 0); // Release the modifier
+            input_sync(keyboard_dev);
+            pr_info("Modifier key released: %d\n", keymod);
+        }
+    }
 }
+
 
 // ---------------------------------------------------------- Reading the Devices
 static struct usb_device_id usb_uart_table[] = {
@@ -56,7 +72,7 @@ MODULE_DEVICE_TABLE(usb, usb_uart_table);
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
     pr_info("USB UART device connected: Hello\n");
 
-    generate_key_events((int[]){KEY_A, KEY_B, KEY_C}, 3);
+    generate_key_events((int[]){}, (int[]){0x04, 0x05, 0x06}, 3);
     return 0;
 }
 
