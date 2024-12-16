@@ -26,7 +26,7 @@ static void generate_key_events(const int *keymodifiers, const int *keycodes, si
     }
 
     // Handle modifier key press
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < (sizeof(keymodifiers)/sizeof(keymodifiers[0])); i++) {
         int keymod = keymodifiers[i];
         if (keymod > 0) { // Assuming a positive value means a modifier is active
             input_report_key(keyboard_dev, keymod, 1); // Press the modifier
@@ -38,6 +38,7 @@ static void generate_key_events(const int *keymodifiers, const int *keycodes, si
     // Handle regular key events
     for (i = 0; i < count; i++) {
         int keycode = keycodes[i];
+        // int keycode = hid_map_usage(keycodes[i]);
         
         // Key press
         input_report_key(keyboard_dev, keycode, 1);
@@ -51,7 +52,7 @@ static void generate_key_events(const int *keymodifiers, const int *keycodes, si
     }
 
     // Handle modifier key release
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < (sizeof(keymodifiers)/sizeof(keymodifiers[0])); i++) {
         int keymod = keymodifiers[i];
         if (keymod > 0) {
             input_report_key(keyboard_dev, keymod, 0); // Release the modifier
@@ -72,7 +73,7 @@ MODULE_DEVICE_TABLE(usb, usb_uart_table);
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
     pr_info("USB UART device connected: Hello\n");
 
-    generate_key_events((int[]){}, (int[]){0x097, 0x05, KEY_B}, 3);
+    generate_key_events((int[]){}, (int[]){KEY_DOLLAR, 00000100, KEY_B}, 3);
     return 0;
 }
 
@@ -141,4 +142,3 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("David Medina - 829423656");
 MODULE_DESCRIPTION("USB-UART keyboard Driver");
 MODULE_VERSION("0.5");
-
