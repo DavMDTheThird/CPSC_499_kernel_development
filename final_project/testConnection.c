@@ -18,7 +18,7 @@ static struct input_dev *keyboard_dev;
 
 // ---------------------------------------------------------- Generate a keyboard report
 // Function to send key events
-static void generate_key_events(const int *keymodifiers, const int *keycodes, size_t count) {
+static void generate_key_events(const int *keymodifiers, size_t mod_count, const int *keycodes, size_t key_count) {
     size_t i;
     if (!keyboard_dev) {
         pr_err("Input device is not initialized\n");
@@ -26,7 +26,7 @@ static void generate_key_events(const int *keymodifiers, const int *keycodes, si
     }
 
     // Handle modifier key press
-    for (i = 0; i < (sizeof(keymodifiers)/sizeof(keymodifiers[0])); i++) {
+    for (i = 0; i < mod_count; i++) {
         int keymod = keymodifiers[i];
         if (keymod > 0) { // Assuming a positive value means a modifier is active
             input_report_key(keyboard_dev, keymod, 1); // Press the modifier
@@ -36,7 +36,7 @@ static void generate_key_events(const int *keymodifiers, const int *keycodes, si
     }
 
     // Handle regular key events
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < key_count; i++) {
         int keycode = keycodes[i];
         // int keycode = hid_map_usage(keycodes[i]);
         
@@ -52,7 +52,7 @@ static void generate_key_events(const int *keymodifiers, const int *keycodes, si
     }
 
     // Handle modifier key release
-    for (i = 0; i < (sizeof(keymodifiers)/sizeof(keymodifiers[0])); i++) {
+    for (i = 0; i < mod_count; i++) {
         int keymod = keymodifiers[i];
         if (keymod > 0) {
             input_report_key(keyboard_dev, keymod, 0); // Release the modifier
@@ -73,7 +73,7 @@ MODULE_DEVICE_TABLE(usb, usb_uart_table);
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
     pr_info("USB UART device connected: Hello\n");
 
-    generate_key_events((int[]){}, (int[]){KEY_DOLLAR, 00000100, KEY_B}, 3);
+    generate_key_events((int[]){}, 0, (int[]){00000110, 00000100, KEY_B}, 3);
     return 0;
 }
 
