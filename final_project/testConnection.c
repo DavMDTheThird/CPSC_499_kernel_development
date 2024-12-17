@@ -259,5 +259,3 @@ static const unsigned int hid_to_linux_keycode[256] = {
     [0xE6] = KEY_RIGHTALT,
     [0xE7] = KEY_RIGHTMETA,
 };
-
-s
