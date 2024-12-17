@@ -30,50 +30,50 @@ static const unsigned int hid_to_linux_keycode[256];
 
 // ---------------------------------------------------------- 3.0 Generate a keyboard report
 // Function to get the modifiers (modifiers bit to key_codes)
-void getPressedModifiers(unsigned char modifierByte, uint8_t modifier_keys[8], size_t mod_count) {
+void getPressedModifiers(unsigned char modifierByte, uint8_t modifier_keys[8], size_t *mod_count) {
     // Check each bit of the modifier byte and add the corresponding constant to modifier_keys
     if (modifierByte & KEY_LEFTCTRL) {
-        modifier_keys[mod_count++] = KEY_LEFTCTRL;
+        modifier_keys[(*mod_count)++] = KEY_LEFTCTRL;
     }
     if (modifierByte & KEY_LEFTSHIFT) {
-        modifier_keys[mod_count++] = KEY_LEFTSHIFT;
+        modifier_keys[(*mod_count)++] = KEY_LEFTSHIFT;
     }
     if (modifierByte & KEY_LEFTALT) {
-        modifier_keys[mod_count++] = KEY_LEFTALT;
+        modifier_keys[(*mod_count)++] = KEY_LEFTALT;
     }
     if (modifierByte & KEY_LEFTMETA) {
-        modifier_keys[mod_count++] = KEY_LEFTMETA;
+        modifier_keys[(*mod_count)++] = KEY_LEFTMETA;
     }
     if (modifierByte & KEY_RIGHTCTRL) {
-        modifier_keys[mod_count++] = KEY_RIGHTCTRL;
+        modifier_keys[(*mod_count)++] = KEY_RIGHTCTRL;
     }
     if (modifierByte & KEY_RIGHTSHIFT) {
-        modifier_keys[mod_count++] = KEY_RIGHTSHIFT;
+        modifier_keys[(*mod_count)++] = KEY_RIGHTSHIFT;
     }
     if (modifierByte & KEY_RIGHTALT) {
-        modifier_keys[mod_count++] = KEY_RIGHTALT;
+        modifier_keys[(*mod_count)++] = KEY_RIGHTALT;
     }
     if (modifierByte & KEY_RIGHTMETA) {
-        modifier_keys[mod_count++] = KEY_RIGHTMETA;
+        modifier_keys[(*mod_count)++] = KEY_RIGHTMETA;
     }
 
     // Fill remaining entries with 0 if fewer than 8 modifiers are pressed
-    for (int i = mod_count; i < 8; i++) {
+    for (int i = *mod_count; i < 8; i++) {
         modifier_keys[i] = 0;
     }
 }
 
 // Function to get the pressed keys (HID to key_codes)
-void getPressedKeys(const uint8_t data[64], uint8_t key_codes[8], size_t key_count) {
+void getPressedKeys(const uint8_t data[64], uint8_t key_codes[8], size_t *key_count) {
     for (int i = 2; i < 8; i++) {
         if(data[i] != 0){
-            key_count++;
+            (*key_count)++;
             uint8_t keycode; 
             keycode = hid_to_linux_keycode[data[i]];
 
             if(keycode != (uint8_t)0){
-                key_codes[key_count] = keycode;
-                key_count++;
+                key_codes[*key_count] = keycode;
+                (*key_count)++;
             }
             else{
                 pr_err("Keycode: %i not found!!\n", data[i]);
@@ -86,7 +86,7 @@ void getPressedKeys(const uint8_t data[64], uint8_t key_codes[8], size_t key_cou
 }
 
 // Function to send key events
-static void generate_key_events(const int *modifiers_codes, size_t mod_count, const int *key_codes, size_t key_count) {
+static void generate_key_events(uint8_t *modifiers_codes, size_t mod_count, uint8_t *key_codes, size_t key_count) {
     size_t i;
     if (!keyboard_dev) {
         pr_err("Input device is not initialized\n");
@@ -137,9 +137,9 @@ void hid_to_key_events(const uint8_t data[64]) {
     size_t key_count = 0;
 
     // Get the modifier keys
-    getPressedModifiers(data[0], modifier_keys, mod_count);
+    getPressedModifiers(data[0], modifier_keys, &mod_count);
     // Get the pressed keys
-    getPressedKeys(data, key_codes, key_count);
+    getPressedKeys(data, key_codes, &key_count);
 
     // Generate key events
     generate_key_events(modifier_keys, mod_count, key_codes, key_count);
@@ -155,7 +155,7 @@ MODULE_DEVICE_TABLE(usb, usb_uart_table);
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
     pr_info("USB UART device connected: Hello\n");
 
-    test[64] = {0x02, 0x00, 0x04, 0x05, 0x06};
+    uint8_t test[64] = {0x02, 0x00, 0x04, 0x05, 0x06};
     hid_to_key_events(test);
     return 0;
 }
