@@ -16,11 +16,81 @@ MODULE_VERSION("0.5");
 static struct input_dev *keyboard_dev;
 int complex_keys[2];
 // Reference the table
-static const unsigned int hid_to_linux_keycode[256];
+hid_to_linux_keycode[256];
 // AES 256 decription
 #define AES_KEY_SIZE 32   // 256-bit key
 #define AES_IV_SIZE 12    // 12-byte IV for AES-GCM
 #define AES_TAG_SIZE 16   // 16-byte GCM tag
+// ---------------------------------------------------------- Mapping of HID to Keycodes
+static const uint8_t hid_to_linux_keycode[256] = {
+    // --- Alphabet --- 
+    [0x04] = KEY_A,
+    [0x05] = KEY_B,
+    [0x06] = KEY_C,
+    [0x07] = KEY_D,
+    [0x08] = KEY_E,
+    [0x09] = KEY_F,
+    [0x0A] = KEY_G,
+    [0x0B] = KEY_H,
+    [0x0C] = KEY_I,
+    [0x0D] = KEY_J,
+    [0x0E] = KEY_K,
+    [0x0F] = KEY_L,
+    [0x10] = KEY_M,
+    [0x11] = KEY_N,
+    [0x12] = KEY_O,
+    [0x13] = KEY_P,
+    [0x14] = KEY_Q,
+    [0x15] = KEY_R,
+    [0x16] = KEY_S,
+    [0x17] = KEY_T,
+    [0x18] = KEY_U,
+    [0x19] = KEY_V,
+    [0x1A] = KEY_W,
+    [0x1B] = KEY_X,
+    [0x1C] = KEY_Y,
+    [0x1D] = KEY_Z,
+    // --- Numbers ---
+    [0x1E] = KEY_1,
+    [0x1F] = KEY_2,
+    [0x20] = KEY_3,
+    [0x21] = KEY_4,
+    [0x22] = KEY_5,
+    [0x23] = KEY_6,
+    [0x24] = KEY_7,
+    [0x25] = KEY_8,
+    [0x26] = KEY_9,
+    [0x27] = KEY_0,
+    // --- Punctuation Symbols ---
+    [0x2C] = KEY_SPACE,
+    [0x2D] = KEY_MINUS,
+    [0x2E] = KEY_EQUAL,
+    [0x2F] = KEY_LEFTBRACE,
+    [0x30] = KEY_RIGHTBRACE,
+    [0x31] = KEY_BACKSLASH,
+    [0x32] = KEY_SEMICOLON,
+    [0x33] = KEY_APOSTROPHE,
+    [0x34] = KEY_GRAVE,
+    [0x35] = KEY_COMMA,
+    [0x36] = KEY_DOT,
+    [0x37] = KEY_SLASH,
+    [0x38] = KEY_KPLEFTPAREN,
+    [0x39] = KEY_KPRIGHTPAREN,
+    // [0x3A] = KEY_LEFTANGLE,
+    // [0x3B] = KEY_RIGHTANGLE,
+    // [0x3C] = KEY_LEFTCURLY,
+    // [0x3D] = KEY_RIGHTCURLY,
+    // [0x3E] = KEY_DQUOT,
+    // [0x3F] = KEY_LQUOT,
+    // [0x40] = KEY_RQUOT,
+    // [0x41] = KEY_LDQUOT,
+    // [0x42] = KEY_RDQUOT,
+    // --- Arrow Keys ---
+    [0x4F] = KEY_RIGHT,
+    [0x50] = KEY_LEFT,
+    [0x51] = KEY_DOWN,
+    [0x52] = KEY_UP,
+};
 
 // ---------------------------------------------------------- 1.0 Recieve the UART message (encrypted keyboard report)
 
@@ -220,75 +290,3 @@ static void __exit keyboard_UART_exit(void){
 
 module_init(keyboard_UART_init);
 module_exit(keyboard_UART_exit);
-
-
-// ---------------------------------------------------------- 6.0 Mapping of HID to Keycodes
-static const uint8_t hid_to_linux_keycode[256] = {
-    // --- Alphabet --- 
-    [0x04] = KEY_A,
-    [0x05] = KEY_B,
-    [0x06] = KEY_C,
-    [0x07] = KEY_D,
-    [0x08] = KEY_E,
-    [0x09] = KEY_F,
-    [0x0A] = KEY_G,
-    [0x0B] = KEY_H,
-    [0x0C] = KEY_I,
-    [0x0D] = KEY_J,
-    [0x0E] = KEY_K,
-    [0x0F] = KEY_L,
-    [0x10] = KEY_M,
-    [0x11] = KEY_N,
-    [0x12] = KEY_O,
-    [0x13] = KEY_P,
-    [0x14] = KEY_Q,
-    [0x15] = KEY_R,
-    [0x16] = KEY_S,
-    [0x17] = KEY_T,
-    [0x18] = KEY_U,
-    [0x19] = KEY_V,
-    [0x1A] = KEY_W,
-    [0x1B] = KEY_X,
-    [0x1C] = KEY_Y,
-    [0x1D] = KEY_Z,
-    // --- Numbers ---
-    [0x1E] = KEY_1,
-    [0x1F] = KEY_2,
-    [0x20] = KEY_3,
-    [0x21] = KEY_4,
-    [0x22] = KEY_5,
-    [0x23] = KEY_6,
-    [0x24] = KEY_7,
-    [0x25] = KEY_8,
-    [0x26] = KEY_9,
-    [0x27] = KEY_0,
-    // --- Punctuation Symbols ---
-    [0x2C] = KEY_SPACE,
-    [0x2D] = KEY_MINUS,
-    [0x2E] = KEY_EQUAL,
-    [0x2F] = KEY_LEFTBRACE,
-    [0x30] = KEY_RIGHTBRACE,
-    [0x31] = KEY_BACKSLASH,
-    [0x32] = KEY_SEMICOLON,
-    [0x33] = KEY_APOSTROPHE,
-    [0x34] = KEY_GRAVE,
-    [0x35] = KEY_COMMA,
-    [0x36] = KEY_DOT,
-    [0x37] = KEY_SLASH,
-    [0x38] = KEY_KPLEFTPAREN,
-    [0x39] = KEY_KPRIGHTPAREN,
-    // [0x3A] = KEY_LEFTANGLE,
-    // [0x3B] = KEY_RIGHTANGLE,
-    // [0x3C] = KEY_LEFTCURLY,
-    // [0x3D] = KEY_RIGHTCURLY,
-    // [0x3E] = KEY_DQUOT,
-    // [0x3F] = KEY_LQUOT,
-    // [0x40] = KEY_RQUOT,
-    // [0x41] = KEY_LDQUOT,
-    // [0x42] = KEY_RDQUOT,
-    // --- Arrow Keys ---
-    [0x4F] = KEY_RIGHT,
-    [0x50] = KEY_LEFT,
-    [0x51] = KEY_DOWN,
-    [0x52] = KEY_UP,
-};
