@@ -15,8 +15,6 @@ MODULE_VERSION("0.5");
 // Global input device structure
 static struct input_dev *keyboard_dev;
 int complex_keys[2];
-// Reference the table
-hid_to_linux_keycode[256];
 // AES 256 decription
 #define AES_KEY_SIZE 32   // 256-bit key
 #define AES_IV_SIZE 12    // 12-byte IV for AES-GCM
