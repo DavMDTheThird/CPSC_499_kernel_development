@@ -15,16 +15,78 @@ MODULE_VERSION("0.5");
 // Global input device structure
 static struct input_dev *keyboard_dev;
 int complex_keys[2];
+// Reference the table
+static const unsigned int hid_to_linux_keycode[256];
+// AES 256 decription
+#define AES_KEY_SIZE 32   // 256-bit key
+#define AES_IV_SIZE 12    // 12-byte IV for AES-GCM
+#define AES_TAG_SIZE 16   // 16-byte GCM tag
 
-// ---------------------------------------------------------- Recieve the UART message (encrypted keyboard report)
+// ---------------------------------------------------------- 1.0 Recieve the UART message (encrypted keyboard report)
 
 
-// ---------------------------------------------------------- Decrypting the information (Needs key)
+// ---------------------------------------------------------- 2.0 Decrypting the information
 
 
-// ---------------------------------------------------------- Generate a keyboard report
+// ---------------------------------------------------------- 3.0 Generate a keyboard report
+// Function to get the modifiers (modifiers bit to key_codes)
+void getPressedModifiers(unsigned char modifierByte, uint8_t modifier_keys[8], size_t mod_count) {
+    // Check each bit of the modifier byte and add the corresponding constant to modifier_keys
+    if (modifierByte & KEY_LEFTCTRL) {
+        modifier_keys[mod_count++] = KEY_LEFTCTRL;
+    }
+    if (modifierByte & KEY_LEFTSHIFT) {
+        modifier_keys[mod_count++] = KEY_LEFTSHIFT;
+    }
+    if (modifierByte & KEY_LEFTALT) {
+        modifier_keys[mod_count++] = KEY_LEFTALT;
+    }
+    if (modifierByte & KEY_LEFTMETA) {
+        modifier_keys[mod_count++] = KEY_LEFTMETA;
+    }
+    if (modifierByte & KEY_RIGHTCTRL) {
+        modifier_keys[mod_count++] = KEY_RIGHTCTRL;
+    }
+    if (modifierByte & KEY_RIGHTSHIFT) {
+        modifier_keys[mod_count++] = KEY_RIGHTSHIFT;
+    }
+    if (modifierByte & KEY_RIGHTALT) {
+        modifier_keys[mod_count++] = KEY_RIGHTALT;
+    }
+    if (modifierByte & KEY_RIGHTMETA) {
+        modifier_keys[mod_count++] = KEY_RIGHTMETA;
+    }
+
+    // Fill remaining entries with 0 if fewer than 8 modifiers are pressed
+    for (int i = mod_count; i < 8; i++) {
+        modifier_keys[i] = 0;
+    }
+}
+
+// Function to get the pressed keys (HID to key_codes)
+void getPressedKeys(const uint8_t data[64], uint8_t key_codes[8], size_t key_count) {
+    for (int i = 2; i < 8; i++) {
+        if(data[i] != 0){
+            key_count++;
+            uint8_t keycode; 
+            keycode = hid_to_linux_keycode[data[i]];
+
+            if(keycode != (uint8_t)0){
+                key_codes[key_count] = keycode;
+                key_count++;
+            }
+            else{
+                pr_err("Keycode: %i not found!!\n", data[i]);
+            }
+        }
+        else{
+            break;
+        }
+    }
+}
+
 // Function to send key events
-static void generate_key_events(const int *keymodifiers, size_t mod_count, const int *keycodes, size_t key_count) {
+static void generate_key_events(const int *modifiers_codes, size_t mod_count, const int *key_codes, size_t key_count) {
     size_t i;
     if (!keyboard_dev) {
         pr_err("Input device is not initialized\n");
@@ -33,7 +95,7 @@ static void generate_key_events(const int *keymodifiers, size_t mod_count, const
 
     // Handle modifier key press
     for (i = 0; i < mod_count; i++) {
-        int keycode = keymodifiers[i];
+        int keycode = modifiers_codes[i];
         
         // Key press
         input_report_key(keyboard_dev, keycode, 1);
@@ -43,7 +105,7 @@ static void generate_key_events(const int *keymodifiers, size_t mod_count, const
 
     // Handle regular key events
     for (i = 0; i < key_count; i++) {
-        int keycode = keycodes[i];
+        int keycode = key_codes[i];
         
         // Key press
         input_report_key(keyboard_dev, keycode, 1);
@@ -58,7 +120,7 @@ static void generate_key_events(const int *keymodifiers, size_t mod_count, const
 
     // Handle modifier key release
     for (i = 0; i < mod_count; i++) {
-        int keycode = keymodifiers[i];
+        int keycode = modifiers_codes[i];
         
         // Key press
         input_report_key(keyboard_dev, keycode, 0);
@@ -67,8 +129,23 @@ static void generate_key_events(const int *keymodifiers, size_t mod_count, const
     }
 }
 
+// Function that takes the HID report and generates key events
+void hid_to_key_events(const uint8_t data[64]) {
+    uint8_t modifier_keys[8];
+    uint8_t key_codes[8];
+    size_t mod_count = 0;
+    size_t key_count = 0;
 
-// ---------------------------------------------------------- Reading the Devices
+    // Get the modifier keys
+    getPressedModifiers(data[0], modifier_keys, mod_count);
+    // Get the pressed keys
+    getPressedKeys(data, key_codes, key_count);
+
+    // Generate key events
+    generate_key_events(modifier_keys, mod_count, key_codes, key_count);
+}
+
+// ---------------------------------------------------------- 4.0 Device creation and module initial and exit defitions
 static struct usb_device_id usb_uart_table[] = {
     { USB_DEVICE(USB_VENDOR_ID, USB_PRODUCT_ID) },
     {}
@@ -78,7 +155,8 @@ MODULE_DEVICE_TABLE(usb, usb_uart_table);
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
     pr_info("USB UART device connected: Hello\n");
 
-    generate_key_events((int[]){KEY_LEFTSHIFT}, 1, (int[]){26, 25, 27}, 3);
+    test[64] = {0x02, 0x00, 0x04, 0x05, 0x06};
+    hid_to_key_events(test);
     return 0;
 }
 
@@ -143,45 +221,9 @@ static void __exit keyboard_UART_exit(void){
 module_init(keyboard_UART_init);
 module_exit(keyboard_UART_exit);
 
-// ---------------------------------------------------------- Mapping of HID to Modifiers Keycodes
-void getPressedModifiers(unsigned char modifierByte, int result[8]) {
-    int count = 0;
 
-    // Check each bit of the modifier byte and add the corresponding constant to result
-    if (modifierByte & KEY_LEFTCTRL) {
-        result[count++] = KEY_LEFTCTRL;
-    }
-    if (modifierByte & KEY_LEFTSHIFT) {
-        result[count++] = KEY_LEFTSHIFT;
-    }
-    if (modifierByte & KEY_LEFTALT) {
-        result[count++] = KEY_LEFTALT;
-    }
-    if (modifierByte & KEY_LEFTMETA) {
-        result[count++] = KEY_LEFTMETA;
-    }
-    if (modifierByte & KEY_RIGHTCTRL) {
-        result[count++] = KEY_RIGHTCTRL;
-    }
-    if (modifierByte & KEY_RIGHTSHIFT) {
-        result[count++] = KEY_RIGHTSHIFT;
-    }
-    if (modifierByte & KEY_RIGHTALT) {
-        result[count++] = KEY_RIGHTALT;
-    }
-    if (modifierByte & KEY_RIGHTMETA) {
-        result[count++] = KEY_RIGHTMETA;
-    }
-
-    // Fill remaining entries with 0 if fewer than 8 modifiers are pressed
-    for (int i = count; i < 8; i++) {
-        result[i] = 0;
-    }
-}
-
-
-// ---------------------------------------------------------- Mapping of HID to Keycodes
-static const unsigned int hid_to_linux_keycode[256] = {
+// ---------------------------------------------------------- 6.0 Mapping of HID to Keycodes
+static const uint8_t hid_to_linux_keycode[256] = {
     // --- Alphabet --- 
     [0x04] = KEY_A,
     [0x05] = KEY_B,
@@ -249,13 +291,4 @@ static const unsigned int hid_to_linux_keycode[256] = {
     [0x50] = KEY_LEFT,
     [0x51] = KEY_DOWN,
     [0x52] = KEY_UP,
-    // --- Key Modifiers ---
-    [0xE0] = KEY_LEFTCTRL,
-    [0xE1] = KEY_LEFTSHIFT,
-    [0xE2] = KEY_LEFTALT,
-    [0xE3] = KEY_LEFTMETA,
-    [0xE4] = KEY_RIGHTCTRL,
-    [0xE5] = KEY_RIGHTSHIFT,
-    [0xE6] = KEY_RIGHTALT,
-    [0xE7] = KEY_RIGHTMETA,
 };
