@@ -10,10 +10,8 @@ MODULE_DESCRIPTION("USB-UART-keyboard Driver");
 MODULE_VERSION("0.5");
 
 // Specific vendor and product ID of the USB to UART
-#define USB_VENDOR_ID_1 0x10c4 
-#define USB_PRODUCT_ID_1 0xea60
-#define USB_VENDOR_ID_2 0x67b
-#define USB_PRODUCT_ID_2 0x2303 
+#define USB_VENDOR_ID 0x67b
+#define USB_PRODUCT_ID 0x2303 
 // Interrupt handling structures
 static struct urb *interrupt_urb;
 static unsigned char *interrupt_buffer;
@@ -236,8 +234,7 @@ void hid_to_key_events(const uint8_t data[64]) {
 
 // ---------------------------------------------------------- 4.0 Device creation and module initial and exit defitions
 static struct usb_device_id usb_uart_table[] = {
-    { USB_DEVICE(USB_VENDOR_ID_1, USB_PRODUCT_ID_1) },
-    { USB_DEVICE(USB_VENDOR_ID_2, USB_PRODUCT_ID_2) },
+    { USB_DEVICE(USB_VENDOR_ID, USB_PRODUCT_ID) },
     {}
 };
 MODULE_DEVICE_TABLE(usb, usb_uart_table);
@@ -249,40 +246,6 @@ static int keyboard_UART_probe(struct usb_interface *interface, const struct usb
     struct usb_device *udev = interface_to_usbdev(interface);
 
     pr_info("USB-UART connected\n");
-    // pr_info("  Serial No   : %s\n", udev->serial ? udev->serial : "Unknown");
-
-
-    struct usb_host_interface *iface_desc;
-
-    pr_info("USB device connected:\n");
-    pr_info("  Vendor ID : 0x%04x\n", id->idVendor);
-    pr_info("  Product ID: 0x%04x\n", id->idProduct);
-    pr_info("  Manufacturer: %s\n", udev->manufacturer ? udev->manufacturer : "Unknown");
-    pr_info("  Product     : %s\n", udev->product ? udev->product : "Unknown");
-    pr_info("  Serial No   : %s\n", udev->serial ? udev->serial : "Unknown");
-
-    iface_desc = interface->cur_altsetting;
-    pr_info("Number of endpoints: %d\n", iface_desc->desc.bNumEndpoints);
-
-    // Iterate through endpoints
-    for (int i = 0; i < iface_desc->desc.bNumEndpoints; i++) {
-        endpoint = &iface_desc->endpoint[i].desc;
-
-        pr_info("Endpoint[%d]:\n", i);
-        pr_info("  Address: 0x%02x\n", endpoint->bEndpointAddress);
-        pr_info("  Attributes: 0x%02x\n", endpoint->bmAttributes);
-        pr_info("  Max Packet Size: %d\n", le16_to_cpu(endpoint->wMaxPacketSize));
-        pr_info("  Interval: %d\n", endpoint->bInterval);
-
-        if (usb_endpoint_is_int_in(endpoint)) {
-            pr_info("  -> Interrupt IN endpoint found!\n");
-        }
-    }
-
-
-
-
-
 
     // Find the interrupt IN endpoint
     endpoint = &interface->cur_altsetting->endpoint[0].desc; // Assuming endpoint[0] is interrupt IN
