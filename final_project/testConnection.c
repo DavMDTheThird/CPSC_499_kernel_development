@@ -252,6 +252,9 @@ static int keyboard_UART_probe(struct usb_interface *interface, const struct usb
     // pr_info("  Serial No   : %s\n", udev->serial ? udev->serial : "Unknown");
 
 
+    struct usb_device *udev = interface_to_usbdev(interface);
+    struct usb_host_interface *iface_desc;
+    struct usb_endpoint_descriptor *endpoint;
 
     pr_info("USB device connected:\n");
     pr_info("  Vendor ID : 0x%04x\n", id->idVendor);
