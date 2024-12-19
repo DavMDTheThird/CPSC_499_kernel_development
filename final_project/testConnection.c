@@ -12,6 +12,10 @@ MODULE_VERSION("0.5");
 // Specific vendor and product ID of the USB to UART
 #define USB_VENDOR_ID  0x10c4 //    Silicon Labs
 #define USB_PRODUCT_ID 0xea60 //    CP210x USB to UART Bridge
+// Interrupt handling structures
+static struct urb *interrupt_urb;
+static unsigned char *interrupt_buffer;
+static struct usb_device *udev; // Global reference to the connected USB device
 // Global input device structure
 static struct input_dev *keyboard_dev;
 int complex_keys[2];
@@ -91,7 +95,18 @@ static const uint8_t hid_to_linux_keycode[256] = {
 };
 
 // ---------------------------------------------------------- 1.0 Recieve the UART message (encrypted keyboard report)
+static void interrupt_callback(struct urb *urb){
+    if (urb->status == 0) {
+        pr_info("Interrupt data received: %*ph\n", urb->actual_length, interrupt_buffer);
+    } else {
+        pr_err("Interrupt URB failed with status %d\n", urb->status);
+    }
 
+    // Resubmit the URB to keep listening for interrupts
+    if (usb_submit_urb(urb, GFP_ATOMIC)) {
+        pr_err("Failed to resubmit interrupt URB\n");
+    }
+}
 
 // ---------------------------------------------------------- 2.0 Decrypting the information
 void decryptMessage(const uint8_t ciphertext[64]){
@@ -225,9 +240,55 @@ static struct usb_device_id usb_uart_table[] = {
 MODULE_DEVICE_TABLE(usb, usb_uart_table);
 
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
-    pr_info("USB-UART connected\n");
+    int retval;
+    struct usb_endpoint_descriptor *endpoint;
 
     struct usb_device *udev = interface_to_usbdev(interface);
+
+    pr_info("USB-UART connected\n");
+    pr_info("  Serial No   : %s\n", udev->serial ? udev->serial : "Unknown");
+
+    // Find the interrupt IN endpoint
+    endpoint = &interface->cur_altsetting->endpoint[0].desc; // Assuming endpoint[0] is interrupt IN
+    if (!usb_endpoint_is_int_in(endpoint)) {
+        pr_err("No interrupt IN endpoint found\n");
+        return -ENODEV;
+    }
+
+    // Allocate buffer for interrupt data
+    interrupt_buffer = kmalloc(le16_to_cpu(endpoint->wMaxPacketSize), GFP_KERNEL);
+    if (!interrupt_buffer) {
+        pr_err("Failed to allocate interrupt buffer\n");
+        return -ENOMEM;
+    }
+
+    // Allocate URB for interrupt endpoint
+    interrupt_urb = usb_alloc_urb(0, GFP_KERNEL);
+    if (!interrupt_urb) {
+        pr_err("Failed to allocate interrupt URB\n");
+        kfree(interrupt_buffer);
+        return -ENOMEM;
+    }
+
+    // Fill the URB
+    usb_fill_int_urb(interrupt_urb, udev,
+                     usb_rcvintpipe(udev, endpoint->bEndpointAddress),
+                     interrupt_buffer,
+                     le16_to_cpu(endpoint->wMaxPacketSize),
+                     interrupt_callback,
+                     NULL,
+                     endpoint->bInterval);
+
+    // Submit the URB to start listening for interrupts
+    retval = usb_submit_urb(interrupt_urb, GFP_KERNEL);
+    if (retval) {
+        pr_err("Failed to submit interrupt URB: %d\n", retval);
+        usb_free_urb(interrupt_urb);
+        kfree(interrupt_buffer);
+        return retval;
+    }
+
+    pr_info("Interrupt URB submitted\n");
 
     uint8_t test[64] = {0x02, 0x00, 0x04, 0x05, 0x06};
     hid_to_key_events(test);
@@ -236,6 +297,15 @@ static int keyboard_UART_probe(struct usb_interface *interface, const struct usb
 
 static void keyboard_UART_disconnect(struct usb_interface *interface){
     pr_info("USB-UART disconnected\n");
+
+    // Free interrupt handling resources
+    if (interrupt_urb) {
+        usb_kill_urb(interrupt_urb);
+        usb_free_urb(interrupt_urb);
+        kfree(interrupt_buffer);
+    }
+
+    udev = NULL;
 }
 
 // USB driver structure
