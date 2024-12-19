@@ -6,7 +6,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("David D. Medina - 829423656");
-MODULE_DESCRIPTION("USB-UART keyboard Driver");
+MODULE_DESCRIPTION("USB-UART-keyboard Driver");
 MODULE_VERSION("0.5");
 
 // Specific vendor and product ID of the USB to UART
@@ -94,7 +94,11 @@ static const uint8_t hid_to_linux_keycode[256] = {
 
 
 // ---------------------------------------------------------- 2.0 Decrypting the information
-
+void decryptMessage(const uint8_t ciphertext[64]){
+    // decript
+    // check hash
+    // check sequence number
+}
 
 // ---------------------------------------------------------- 3.0 Generate a keyboard report
 // Function to get the modifiers (modifiers bit to key_codes)
@@ -221,7 +225,9 @@ static struct usb_device_id usb_uart_table[] = {
 MODULE_DEVICE_TABLE(usb, usb_uart_table);
 
 static int keyboard_UART_probe(struct usb_interface *interface, const struct usb_device_id *id){
-    pr_info("USB UART device connected: Hello\n");
+    pr_info("USB-UART connected\n");
+
+    struct usb_device *udev = interface_to_usbdev(interface);
 
     uint8_t test[64] = {0x02, 0x00, 0x04, 0x05, 0x06};
     hid_to_key_events(test);
@@ -229,7 +235,7 @@ static int keyboard_UART_probe(struct usb_interface *interface, const struct usb
 }
 
 static void keyboard_UART_disconnect(struct usb_interface *interface){
-    pr_info("USB UART device disconnected: Goodbye\n");
+    pr_info("USB-UART disconnected\n");
 }
 
 // USB driver structure
