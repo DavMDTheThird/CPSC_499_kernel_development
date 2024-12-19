@@ -1,4 +1,4 @@
-obj-m += testConnection.o
+obj-m += uart_keyboar_module.o
 
 
 PWD := $(CURDIR)
